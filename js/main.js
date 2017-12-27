@@ -1,83 +1,73 @@
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
-var platforms, player, stars, scoreText;
+var game;
+var platform;
+var background;
+var player;
+var stars;
+var scoreText;
+var cursors;
 var score = 0;
 
+window.onload = function () {
+    // Inicia o game
+    game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+    // Inicia components
+    platform   = new Platform(game);
+    background = new Background(game);
+    player     = new Player(game);
+    star       = new Star(game);
+}
+
 function preload() {
-    game.load.image('sky', 'assets/images/sky.png');
-    game.load.image('ground', 'assets/images/platform.png');
-    game.load.image('star', 'assets/images/star.png');
-    game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
+    // Carrega os sripts dos components
+    platform.preload();
+    background.preload();
+    player.preload();
+    star.preload();
 }
 
 function create() {
+    // Inicia a física
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    game.add.sprite(0, 0, 'sky');
+    // Inicia controles
+    cursors = game.input.keyboard.createCursorKeys();
 
-    platforms = game.add.group();
-    platforms.enableBody = true;
+    // Cria background
+    background.createBackground();
 
-    platforms.create(0, game.world.height - 64, 'ground').scale.setTo(2, 2);
+    // Inicializa os grupos
+    platform.initGroup();
+    star.initGroup();
 
-    platforms.create(400, 400, 'ground');
-    platforms.create(-150, 250, 'ground');
+    // Cria plataformas
+    platform.spawnPlatform(0, 550);
+    platform.spawnPlatform(400, 550);
+    platform.spawnPlatform(400, 400);
+    platform.spawnPlatform(-150, 250);
 
-    platforms.setAll('body.immovable', true);
+    // Inicia o player
+    player.createPlayer(32, 500);
 
-    stars = game.add.group();
-    stars.enableBody = true;
-    for (var i = 0; i < 12; i++)
-    {
-        var star = stars.create(i * 70, 0, 'star');
-        star.body.gravity.y = 100;
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
-    }
+    // Cria estrelas
+    star.spawnStar(0,0);
+    star.spawnStar(70,0);
 
+    // Pontuação
     scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-    player = game.add.sprite(32, game.world.height - 150, 'dude');
-    game.physics.arcade.enable(player);
-
-    player.body.bounce.y = 0.2;
-    player.body.gravity.y = 300;
-    player.body.collideWorldBounds = true;
-
-    player.animations.add('left', [0, 1, 2, 3], 10, true);
-    player.animations.add('right', [5, 6, 7, 8], 10, true);
 }
 
 function update() {
-    var hitPlatform = game.physics.arcade.collide(player, platforms);
-    cursors = game.input.keyboard.createCursorKeys();
+    game.physics.arcade.collide(player.player, platform.group);
+    game.physics.arcade.collide(star.group, platform.group);
+    game.physics.arcade.overlap(player.player, star.group, collectStar, null, this);
 
-    game.physics.arcade.collide(stars, platforms);
-    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    if      (cursors.left.isDown)  player.goLeft();
+    else if (cursors.right.isDown) player.goRight();
+    else                           player.standBy();
 
-    if (cursors.left.isDown)
-    {
-        player.body.velocity.x = -150;
-        player.animations.play('left');
-    }
-
-    else if (cursors.right.isDown)
-    {
-        player.body.velocity.x = 150;
-        player.animations.play('right');
-    }
-
-    else
-    {
-        player.body.velocity.x = 0;
-        player.animations.stop();
-        player.frame = 4;
-    }
-
-    if (cursors.up.isDown && player.body.touching.down && hitPlatform)
-    {
-        player.body.velocity.y = -350;
-    }
-
+    if (cursors.up.isDown && player.player.body.touching.down) player.jump();
 }
 
 function collectStar (player, star) {
