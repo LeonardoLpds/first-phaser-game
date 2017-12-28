@@ -36,6 +36,8 @@ function create() {
     // Cria background
     background.createBackground();
 
+    game.world.setBounds(0, 0, 1920, 1200);
+
     // Inicializa os grupos
     platform.initGroup();
     star.initGroup();
@@ -49,6 +51,8 @@ function create() {
     // Inicia o player
     player.createPlayer(32, 400);
 
+    game.camera.follow(player.player);
+
     // Cria estrelas
     star.spawnStar(32,200);
     star.spawnStar(70,200);
@@ -57,6 +61,7 @@ function create() {
     // Pontuação
     scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 }
+
 
 function update() {
     game.physics.arcade.collide(player.player, platform.group);
@@ -68,7 +73,12 @@ function update() {
     else if (cursors.down.isDown)  player.duck();
     else                           player.standBy();
 
-    if (cursors.up.isDown && player.player.body.touching.down) player.jump();
+    if (cursors.up.isDown)         player.jump();
+    else if (player.jumptimer != 0)
+    {
+        player.jumptimer.stop();
+        player.jumptimer.ms = 0;
+    }
 }
 
 function render () {
