@@ -9,7 +9,7 @@ var score = 0;
 
 window.onload = function () {
     // Inicia o game
-    game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update,  render: render });
 
     // Inicia components
     platform   = new Platform(game);
@@ -47,15 +47,15 @@ function create() {
     platform.spawnPlatform(-150, 250);
 
     // Inicia o player
-    player.createPlayer(32, 500);
+    player.createPlayer(32, 400);
 
     // Cria estrelas
-    star.spawnStar(0,0);
-    star.spawnStar(70,0);
+    star.spawnStar(32,200);
+    star.spawnStar(70,200);
+    star.spawnStar(70,400);
 
     // Pontuação
     scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
-
 }
 
 function update() {
@@ -65,14 +65,18 @@ function update() {
 
     if      (cursors.left.isDown)  player.goLeft();
     else if (cursors.right.isDown) player.goRight();
+    else if (cursors.down.isDown)  player.duck();
     else                           player.standBy();
 
     if (cursors.up.isDown && player.player.body.touching.down) player.jump();
 }
 
-function collectStar (player, star) {
-    star.kill();
+function render () {
+    // game.debug.body(player.player);
+}
 
+function collectStar (player, star_collected) {
+    star_collected.kill();
     score += 10;
     scoreText.text = 'Score: ' + score;
 }

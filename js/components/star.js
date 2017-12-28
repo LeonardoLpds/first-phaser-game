@@ -15,7 +15,6 @@ Star = function(game) {
 
     this.spawnStar = function(x, y){
         var temp_star = this.group.create(x, y, this.name);
-        temp_star.body.gravity.y = 300;
-        temp_star.body.bounce.y = 0.7 + Math.random() * 0.2;
+        temp_star.body.immovable = true;
     }
 }
